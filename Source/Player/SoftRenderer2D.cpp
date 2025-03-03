@@ -65,7 +65,7 @@ void SoftRenderer::Update2D(float InDeltaSeconds)
 	// 게임 로직의 로컬 변수
 	static float moveSpeed = 100.f;
 
-	Vector2 inputVector = Vector2(input.GetAxis(InputAxis::XAxis), input.GetAxis(InputAxis::YAxis));	
+	Vector2 inputVector = Vector2(input.GetAxis(InputAxis::XAxis), input.GetAxis(InputAxis::YAxis));
 	Vector2 deltaPosition = inputVector * moveSpeed * InDeltaSeconds;
 
 	// 물체의 최종 상태 설정
@@ -84,11 +84,8 @@ void SoftRenderer::Render2D()
 
 	// 렌더링 로직의 로컬 변수
 
-
-	// 밝은 회색의 선을 사용해 평행한 벡터를 표현
-	static float lineLength = 500.f;
-	Vector2 lineStart = currentPosition * lineLength;
-	Vector2 lineEnd = currentPosition * -lineLength;
+	Vector2 lineStart = Vector2::Zero;
+	Vector2 lineEnd = currentPosition;
 	r.DrawLine(lineStart, lineEnd, LinearColor::LightGray);
 
 	// 벡터를 파란색 픽셀로 표현
