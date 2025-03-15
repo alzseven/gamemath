@@ -33,6 +33,7 @@ public:
 	// 행렬 생성
 	FORCEINLINE void GetViewAxes(Vector3& OutViewX, Vector3& OutViewY, Vector3& OutViewZ) const;
 	FORCEINLINE Matrix4x4 GetViewMatrix() const;
+	FORCEINLINE Matrix4x4 GetViewMatrixTROptimized() const;
 	FORCEINLINE Matrix4x4 GetViewMatrixRotationOnly() const;
 	FORCEINLINE Matrix4x4 GetPerspectiveMatrix() const;
 	FORCEINLINE Matrix4x4 GetPerspectiveViewMatrix() const;
@@ -55,6 +56,84 @@ FORCEINLINE void CameraObject::GetViewAxes(Vector3& OutViewX, Vector3& OutViewY,
 }
 
 FORCEINLINE Matrix4x4 CameraObject::GetViewMatrix() const
+{
+	Vector3 viewX, viewY, viewZ;
+	GetViewAxes(viewX, viewY, viewZ);
+	Vector3 pos = _Transform.GetPosition();
+
+	/*
+		R = 3 * 3 회전 행렬
+
+	  	| R 0 |
+		| 0 1 |
+	 
+		Matrix4x4 matRot = Matrix4x4(
+		Vector4(Vector3(viewX.X, viewX.Y, viewX.Z), false),
+		Vector4(Vector3(viewX.X, viewX.Y, viewX.Z), false),
+		Vector4(Vector3(viewX.X, viewX.Y, viewX.Z), false),
+		Vector4::UnitW);
+	*/
+	
+	/*
+		R^t = 3 * 3 회전 행렬의 역행렬(== R의 전치행렬)
+
+	  	| R^t 0 |
+		| 0   1 |
+	
+	*/
+	Matrix4x4 matRotInv = Matrix4x4(
+		Vector4(Vector3(viewX.X, viewY.X, viewZ.X), false),
+		Vector4(Vector3(viewX.Y, viewY.Y, viewZ.Y), false),
+		Vector4(Vector3(viewX.Z, viewY.Z, viewZ.Z), false),
+		Vector4::UnitW);
+	/*
+
+		I = 3 * 3 단위행렬
+		T = 3 * 1 이동행렬
+
+	  	| I T |
+		| 0 1 |
+	
+		Matrix4x4 matTrans = Matrix4x4(
+		Vector4(Vector3::UnitX, false),
+		Vector4(Vector3::UnitY, false),
+		Vector4(Vector3::UnitZ, false),
+		Vector4(pos, true));
+	*/
+
+	/*
+
+		I = 3 * 3 단위행렬
+		-T = 3 * 1 이동행렬의 역행렬
+
+		| I -T |
+		| 0  1 |
+
+	*/
+	Matrix4x4 matTransInv = Matrix4x4(
+		Vector4(Vector3::UnitX, false),
+		Vector4(Vector3::UnitY, false),
+		Vector4(Vector3::UnitZ, false),
+		Vector4(-pos, true));
+
+	/*
+		뷰 행렬은 카메라를 기준으로 월드의 변화량을 보여줄수 있어야 한다
+		즉 카메라의 월드 행렬을 M이라 할때
+		M = T * R (카메라는 스케일이 없다)
+		
+		M^-1 = T^-1 * R^-1
+	*/
+	return matRotInv * matTransInv;
+
+	//return Matrix4x4(
+	//	Vector4(Vector3(viewX.X, viewY.X, viewZ.X), false),
+	//	Vector4(Vector3(viewX.Y, viewY.Y, viewZ.Y), false),
+	//	Vector4(Vector3(viewX.Z, viewY.Z, viewZ.Z), false),
+	//	Vector4(-viewX.Dot(pos), -viewY.Dot(pos), -viewZ.Dot(pos), 1.f)
+	//);
+}
+
+FORCEINLINE Matrix4x4 CameraObject::GetViewMatrixTROptimized() const
 {
 	Vector3 viewX, viewY, viewZ;
 	GetViewAxes(viewX, viewY, viewZ);

@@ -18,7 +18,8 @@ void SoftRenderer::DrawGizmo3D()
 		Vertex3D(Vector4(Vector3::UnitZ * _GizmoUnitLength)),
 	};
 
-	Matrix4x4 viewMatRotationOnly = g.GetMainCamera().GetViewMatrixRotationOnly();
+	//Matrix4x4 viewMatRotationOnly = g.GetMainCamera().GetViewMatrixRotationOnly();
+	Matrix4x4 viewMatRotationOnly = g.GetMainCamera().GetViewMatrix();
 	VertexShader3D(viewGizmo, viewMatRotationOnly);
 
 	// 축 그리기
@@ -131,6 +132,7 @@ void SoftRenderer::Render3D()
 
 	// 렌더링 로직의 로컬 변수
 	const Matrix4x4 pvMatrix = mainCamera.GetPerspectiveViewMatrix();
+
 
 	// 절두체 컬링 테스트를 위한 통계 변수
 	size_t totalObjects = g.GetScene().size();
