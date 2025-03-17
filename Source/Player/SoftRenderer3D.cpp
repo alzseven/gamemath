@@ -90,23 +90,34 @@ void SoftRenderer::Update3D(float InDeltaSeconds)
 	float deltaFOV = input.GetAxis(InputAxis::WAxis) * fovSpeed * InDeltaSeconds;
 	camera.SetFOV(Math::Clamp(camera.GetFOV() + deltaFOV, minFOV, maxFOV));
 
-	// 시간에 따른 카메라 회전의 보간
-	elapsedTime = Math::Clamp(elapsedTime + InDeltaSeconds, 0.f, duration);
-	if (elapsedTime == duration)
-	{
-		elapsedTime = 0.f;
-		startRotation = endRotation;
+	//float xMov = input.GetAxis(InputAxis::XAxis) * fovSpeed * InDeltaSeconds;
+	//float yMov = input.GetAxis(InputAxis::YAxis) * fovSpeed * InDeltaSeconds;
+	//float zMov = input.GetAxis(InputAxis::ZAxis) * fovSpeed * InDeltaSeconds;
+	
+	float xRot = input.GetAxis(InputAxis::XAxis) * fovSpeed * InDeltaSeconds;
+	float yRot = input.GetAxis(InputAxis::YAxis) * fovSpeed * InDeltaSeconds;
+	float zRot = input.GetAxis(InputAxis::ZAxis) * fovSpeed * InDeltaSeconds;
+	//camera.GetTransform().AddPosition(Vector3(xMov, yMov, zMov));
+	camera.GetTransform().AddPitchRotation(xRot);
+	camera.GetTransform().AddRollRotation(yRot);
+	camera.GetTransform().AddYawRotation(zRot);
+	//// 시간에 따른 카메라 회전의 보간
+	//elapsedTime = Math::Clamp(elapsedTime + InDeltaSeconds, 0.f, duration);
+	//if (elapsedTime == duration)
+	//{
+	//	elapsedTime = 0.f;
+	//	startRotation = endRotation;
 
-		Vector3 randomAxis = Vector3(dir(generator), dir(generator), dir(generator)).GetNormalize();
-		endRotation = Quaternion(randomAxis, angle(generator));
-		camera.GetTransform().SetRotation(startRotation);
-	}
-	else
-	{
-		float t = elapsedTime / duration;
-		Quaternion current = Quaternion::Slerp(startRotation, endRotation, t);
-		camera.GetTransform().SetRotation(current);
-	}
+	//	Vector3 randomAxis = Vector3(dir(generator), dir(generator), dir(generator)).GetNormalize();
+	//	endRotation = Quaternion(randomAxis, angle(generator));
+	//	camera.GetTransform().SetRotation(startRotation);
+	//}
+	//else
+	//{
+	//	float t = elapsedTime / duration;
+	//	Quaternion current = Quaternion::Slerp(startRotation, endRotation, t);
+	//	camera.GetTransform().SetRotation(current);
+	//}
 }
 
 // 애니메이션 로직을 담당하는 함수
@@ -131,8 +142,12 @@ void SoftRenderer::Render3D()
 	DrawGizmo3D();
 
 	// 렌더링 로직의 로컬 변수
-	const Matrix4x4 pvMatrix = mainCamera.GetPerspectiveViewMatrix();
+	//const Matrix4x4 pvMatrix = mainCamera.GetPerspectiveViewMatrix();
+	const Matrix4x4 viewMatrix = mainCamera.GetViewMatrix();
+	const Matrix4x4 pMatrix = mainCamera.GetPerspectiveMatrix();
 
+	const Matrix4x4 pvMatrix = pMatrix * viewMatrix;
+	//const Matrix4x4 pvMatrix = pMatrix;
 
 	// 절두체 컬링 테스트를 위한 통계 변수
 	size_t totalObjects = g.GetScene().size();
@@ -184,6 +199,7 @@ void SoftRenderer::Render3D()
 
 		// 메시 그리기
 		DrawMesh3D(mesh, finalMatrix, gameObject.GetColor());
+		//DrawMesh3D(mesh, pvMatrix * transform.GetModelingMatrix(), gameObject.GetColor());
 
 		// 그린 물체를 통계에 포함
 		renderedObjects++;
